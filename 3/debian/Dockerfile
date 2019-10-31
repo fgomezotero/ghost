@@ -31,7 +31,12 @@ RUN set -eux; \
 	mkdir -p "$GHOST_INSTALL"; \
 	chown node:node "$GHOST_INSTALL"; \
 	\
-	gosu node ghost install "$GHOST_VERSION" --db mysql --no-prompt --no-stack --no-setup --dir "$GHOST_INSTALL"; \
+	gosu node ghost install "$GHOST_VERSION" --db mysql \
+		--dbhost $GHOST_DB \
+		--dbuser $GHOST_DB_USER \
+		--dbpass $GHOST_DB_PW \
+		--dbname $GHOST_DB_NAME ; \
+		--no-prompt --no-stack --no-setup --dir "$GHOST_INSTALL"; \
 	\
 # Tell Ghost to listen on all ips and not prompt for additional configuration
 	cd "$GHOST_INSTALL"; \
