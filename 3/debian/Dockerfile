@@ -31,11 +31,15 @@ RUN set -eux; \
 	mkdir -p "$GHOST_INSTALL"; \
 	chown node:node "$GHOST_INSTALL"; \
 	\
-	gosu node ghost install "$GHOST_VERSION" --db sqlite3 --no-prompt --no-stack --no-setup --dir "$GHOST_INSTALL"; \
+	gosu node ghost install "$GHOST_VERSION" --db mysql --no-prompt --no-stack --no-setup --dir "$GHOST_INSTALL"; \
 	\
 # Tell Ghost to listen on all ips and not prompt for additional configuration
 	cd "$GHOST_INSTALL"; \
-	gosu node ghost config --ip 0.0.0.0 --port 2368 --no-prompt --db sqlite3 --url http://localhost:2368 --dbpath "$GHOST_CONTENT/data/ghost.db"; \
+	gosu node ghost config --ip 0.0.0.0 --port 2368 --db mysql --url http://localhost:2368 \
+		--dbhost $GHOST_DB \
+		--dbuser $GHOST_DB_USER \
+		--dbpass $GHOST_DB_PW \
+		--dbname $GHOST_DB_NAME ; \
 	gosu node ghost config paths.contentPath "$GHOST_CONTENT"; \
 	\
 # make a config.json symlink for NODE_ENV=development (and sanity check that it's correct)
@@ -50,27 +54,27 @@ RUN set -eux; \
 # force install "sqlite3" manually since it's an optional dependency of "ghost"
 # (which means that if it fails to install, like on ARM/ppc64le/s390x, the failure will be silently ignored and thus turn into a runtime error instead)
 # see https://github.com/TryGhost/Ghost/pull/7677 for more details
-	cd "$GHOST_INSTALL/current"; \
+#	cd "$GHOST_INSTALL/current"; \
 # scrape the expected version of sqlite3 directly from Ghost itself
-	sqlite3Version="$(npm view . optionalDependencies.sqlite3)"; \
-	if ! gosu node yarn add "sqlite3@$sqlite3Version" --force; then \
+#	sqlite3Version="$(npm view . optionalDependencies.sqlite3)"; \
+#	if ! gosu node yarn add "sqlite3@$sqlite3Version" --force; then \
 # must be some non-amd64 architecture pre-built binaries aren't published for, so let's install some build deps and do-it-all-over-again
-		savedAptMark="$(apt-mark showmanual)"; \
-		apt-get update; \
-		apt-get install -y --no-install-recommends python make gcc g++ libc-dev; \
-		rm -rf /var/lib/apt/lists/*; \
-		\
-		gosu node yarn add "sqlite3@$sqlite3Version" --force --build-from-source; \
-		\
-		apt-mark showmanual | xargs apt-mark auto > /dev/null; \
-		[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
-		apt-get purge -y --auto-remove; \
-	fi; \
-	\
-	gosu node yarn cache clean; \
-	gosu node npm cache clean --force; \
-	npm cache clean --force; \
-	rm -rv /tmp/yarn* /tmp/v8*
+#		savedAptMark="$(apt-mark showmanual)"; \
+#		apt-get update; \
+#		apt-get install -y --no-install-recommends python make gcc g++ libc-dev; \
+#		rm -rf /var/lib/apt/lists/*; \
+#		\
+#		gosu node yarn add "sqlite3@$sqlite3Version" --force --build-from-source; \
+#		\
+#		apt-mark showmanual | xargs apt-mark auto > /dev/null; \
+#		[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
+#		apt-get purge -y --auto-remove; \
+#	fi; \
+#	\
+#	gosu node yarn cache clean; \
+#	gosu node npm cache clean --force; \
+#	npm cache clean --force; \
+#	rm -rv /tmp/yarn* /tmp/v8*
 
 WORKDIR $GHOST_INSTALL
 VOLUME $GHOST_CONTENT
