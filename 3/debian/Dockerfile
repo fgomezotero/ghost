@@ -35,7 +35,7 @@ RUN set -eux; \
 		--dbhost $GHOST_DB \
 		--dbuser $GHOST_DB_USER \
 		--dbpass $GHOST_DB_PW \
-		--dbname $GHOST_DB_NAME ; \
+		--dbname $GHOST_DB_NAME \
 		--no-prompt --no-stack --no-setup --dir "$GHOST_INSTALL"; \
 	\
 # Tell Ghost to listen on all ips and not prompt for additional configuration
